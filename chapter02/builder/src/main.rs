@@ -100,11 +100,12 @@ impl Pizza {
 }
 
 trait Builder {
-    fn new(&self) -> Self;
+    // fn new(&self) -> Self;
     fn prepare_dough(&mut self);
     fn add_sauce(&mut self);
     fn add_topping(&mut self);
     fn bake(&mut self);
+    fn get_pizza_name(&self) -> &String;
 }
 
 struct MargaritaBuilder {
@@ -113,7 +114,7 @@ struct MargaritaBuilder {
     baking_time: u64,
 }
 
-impl Builder for MargaritaBuilder {
+impl MargaritaBuilder {
     fn new(&self) -> Self {
         MargaritaBuilder {
             pizza: Pizza::new(String::from("margarita")),
@@ -121,7 +122,9 @@ impl Builder for MargaritaBuilder {
             baking_time: 5,
         }
     }
+}
 
+impl Builder for MargaritaBuilder {
     fn prepare_dough(&mut self) {
         self.progress = PizzaProgress::Preparation;
         self.pizza.prepare_dough(PizzaDough::Thin);
@@ -154,6 +157,35 @@ impl Builder for MargaritaBuilder {
         println!("your margarita is ready");
     }
 
+    fn get_pizza_name(&self) -> &String { self.pizza.get_name() }
+}
+
+
+struct Waiter<'a> {
+    builder: Option<&'a mut Builder>,
+}
+
+impl<'a> Waiter<'a> {
+    fn new() -> Waiter<'a> {
+        Waiter { builder: None }
+    }
+
+    // If lifetime annotation is not used in this function, compiler will complain.
+    fn construct_pizza<T: Builder>(&mut self, builder: &'a mut T) {
+        self.builder = Some(builder);
+
+        if let Some(b) = self.builder.as_mut() { b.prepare_dough() };
+        if let Some(b) = self.builder.as_mut() { b.add_sauce() };
+        if let Some(b) = self.builder.as_mut() { b.add_topping() };
+        if let Some(b) = self.builder.as_mut() { b.bake() };
+    }
+
+    fn get_pizza_name(&self) -> Option<&String> {
+        match self.builder.as_ref() {
+            Some(b) => Some(b.get_pizza_name()),
+            None => None,
+        }
+    }
 }
 
 fn main() {
