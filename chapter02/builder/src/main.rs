@@ -1,4 +1,6 @@
 use std::fmt;
+use std::io;
+use std::io::Write;
 use std::thread;
 use std::time::Duration;
 
@@ -115,7 +117,7 @@ struct MargaritaBuilder {
 }
 
 impl MargaritaBuilder {
-    fn new(&self) -> Self {
+    fn new() -> Self {
         MargaritaBuilder {
             pizza: Pizza::new(String::from("margarita")),
             progress: PizzaProgress::Queued,
@@ -161,17 +163,20 @@ impl Builder for MargaritaBuilder {
 }
 
 
-struct Waiter<'a> {
-    builder: Option<&'a mut Builder>,
+struct Waiter {
+    builder: Option<Box<dyn Builder>>,
 }
 
-impl<'a> Waiter<'a> {
-    fn new() -> Waiter<'a> {
-        Waiter { builder: None }
-    }
+trait Worker {}
 
+impl Worker for Waiter {}
+
+impl Waiter {
+    fn new() -> Box<dyn Worker> {
+        Box::new(Waiter { builder: None })
+    }
     // If lifetime annotation is not used in this function, compiler will complain.
-    fn construct_pizza<T: Builder>(&mut self, builder: &'a mut T) {
+    fn construct_pizza<T: Builder>(&mut self, builder: Box<T>) {
         self.builder = Some(builder);
 
         if let Some(b) = self.builder.as_mut() { b.prepare_dough() };
@@ -188,6 +193,38 @@ impl<'a> Waiter<'a> {
     }
 }
 
+fn validate_style() -> String {
+    let mut valid_input =false;
+    let mut pizza = String::new();
+
+     while true {
+         print!("What pizza would you like, [m]argarita or [c]reamy bacon? ");
+         io::stdout().flush().unwrap();
+         if let Ok(_) = io::stdin().read_line(&mut pizza) {
+             valid_input = true;
+         } else {
+             println!("Failed to read character");
+         }
+     }
+     pizza
+}
+
+fn deploy_waiter(order: String) -> Option<Box<Builder>> {
+    if order == String::from("m") {
+        Some(Box::new(MargaritaBuilder::new()))
+    } else {
+        println!("Sorry, only margarita (key m) and creamy bacon (key c) are available");
+        None
+    }
+}
+
+
 fn main() {
-    println!("Hello, world!");
+    let waiter = Waiter::new();
+    let order = validate_style();
+    let builder = deploy_waiter(order).unwrap();
+    // waiter.construct_pizza(builder);
+    let pizza = waiter.get_pizza_name().unwrap();
+    println!("Enjoy your {}!", pizza);
+    
 }
