@@ -163,20 +163,26 @@ impl Builder for MargaritaBuilder {
 }
 
 
-struct Waiter {
-    builder: Option<Box<dyn Builder>>,
+struct Waiter<'a> {
+    // https://users.rust-lang.org/t/box-lifetime-problem/9030
+    builder: Option<Box<dyn Builder + 'a>>,
 }
 
-trait Worker {}
+// trait Worker {}
+// trait Worker: Sized {}
 
-impl Worker for Waiter {}
 
-impl Waiter {
-    fn new() -> Box<dyn Worker> {
-        Box::new(Waiter { builder: None })
-    }
+// impl<'a> Waiter<'a> {
+//     fn new() -> Box<dyn Worker + 'a> {
+//         Box::new(Waiter { builder: None })
+//     }
+// }
+// 
+
+// impl<'a> Worker for Waiter<'a> {
+impl<'a> Waiter<'a> {
     // If lifetime annotation is not used in this function, compiler will complain.
-    fn construct_pizza<T: Builder>(&mut self, builder: Box<T>) {
+    fn construct_pizza<T: Builder + 'a>(&mut self, builder: Box<T>) {
         self.builder = Some(builder);
 
         if let Some(b) = self.builder.as_mut() { b.prepare_dough() };
@@ -197,7 +203,7 @@ fn validate_style() -> String {
     let mut valid_input =false;
     let mut pizza = String::new();
 
-     while true {
+     while valid_input == false {
          print!("What pizza would you like, [m]argarita or [c]reamy bacon? ");
          io::stdout().flush().unwrap();
          if let Ok(_) = io::stdin().read_line(&mut pizza) {
@@ -206,10 +212,11 @@ fn validate_style() -> String {
              println!("Failed to read character");
          }
      }
-     pizza
+     String::from(pizza.trim_end_matches("\n"))
 }
 
-fn deploy_waiter(order: String) -> Option<Box<Builder>> {
+
+fn deploy_waiter(order: String) -> Option<Box<dyn Builder>> {
     if order == String::from("m") {
         Some(Box::new(MargaritaBuilder::new()))
     } else {
@@ -220,10 +227,11 @@ fn deploy_waiter(order: String) -> Option<Box<Builder>> {
 
 
 fn main() {
-    let waiter = Waiter::new();
+    // let waiter = Box::new(Waiter { builder: None });
+    let mut waiter = Waiter { builder: None };
     let order = validate_style();
-    let builder = deploy_waiter(order).unwrap();
-    // waiter.construct_pizza(builder);
+    let builder: Box<dyn Builder> = deploy_waiter(order).unwrap();
+    waiter.construct_pizza(builder);
     let pizza = waiter.get_pizza_name().unwrap();
     println!("Enjoy your {}!", pizza);
     
