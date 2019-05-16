@@ -23,7 +23,7 @@ Refer to the original repository's [README.md](https://github.com/PacktPublishin
   * apple_factory.py -> Done
   * builder.py
   * computer_builder.py -> Done
-  * exercise_fluent_builder.py
+  * exercise_fluent_builder.py -> Done
 * Chapter 3
   * prototype.py
   * singletone.py
