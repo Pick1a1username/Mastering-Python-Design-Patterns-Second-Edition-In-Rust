@@ -25,7 +25,11 @@ Refer to the original repository's [README.md](https://github.com/PacktPublishin
   * computer_builder.py -> Done
   * exercise_fluent_builder.py -> Done
 * Chapter 3
-  * prototype.py
+  * prototype.py -> Done
+
+    -> prototype_1: Website object itself passed when it is registered to prototype.
+
+    -> prototype_2: Website object's reference passed when it is registered to prototype.
   * singletone.py
 * Chapter 4
   * adapter.py
