@@ -27,16 +27,19 @@ impl Website {
     }
 
     fn get_info(&self) -> String {
-        let mut summary = vec![format!("Website \"{}\"", self.info["name"])];
+        let mut summary = vec![format!("Website: \"{}\"\n", self.info["name"])];
 
-        let mut infos = self.info.clone();
-        sort_string_only_hashmap(&mut infos);
+        let infos = self.info.clone();
+        // HashMap cannot be sorted like Python.
+        // So, get sorted keys of it separately and print infos orderly.
+        // Reference: https://doc.rust-lang.org/std/collections/struct.HashMap.html#method.iter
+        let sorted_keys = sorted_keys(&infos);
 
-        for (key, value) in infos {
+        for key in sorted_keys {
             if key == String::from("name") {
                 continue
             }
-            summary.push(format!("{}: {}\n", key, value));
+            summary.push(format!("{}: {}\n", key, infos[&key]));
         }
 
         let mut summary_for_print = String::new();
@@ -88,7 +91,7 @@ impl Prototype {
 }
 
 
-fn sort_string_only_hashmap(hashmap: &mut HashMap<String, String>) {
+fn sorted_keys(hashmap: &HashMap<String, String>) -> Vec<String> {
     // Get keys
     let mut keys: Vec<String> = Vec::new();
     
@@ -96,8 +99,24 @@ fn sort_string_only_hashmap(hashmap: &mut HashMap<String, String>) {
         keys.push(key.clone());
     }
 
+    // Sort and return key vector
+    keys.sort();
+    keys
+}
+ 
+fn sort_string_only_hashmap(hashmap: &mut HashMap<String, String>) {
+    // Get keys
+    let mut keys: Vec<String> = Vec::new();
+    
+    println!("{:?}", hashmap );
+    for key in hashmap.keys() {
+        keys.push(key.clone());
+    }
+    println!("{:?}", keys);
+
     // Sort key vector
     keys.sort();
+    println!("{:?}", keys);
  
     // Recreate hashmap
     let mut sorted_hashmap: HashMap<String, String> = HashMap::new();
@@ -107,6 +126,7 @@ fn sort_string_only_hashmap(hashmap: &mut HashMap<String, String>) {
 
     // Set the variable to the recreated hashmap
     *hashmap = sorted_hashmap;
+    println!("{:?}", hashmap );
 }
 
 fn main() {
@@ -115,6 +135,7 @@ fn main() {
     let keywords: String = String::from("python,data,apis,automation");
     let mut keywords_mapped: HashMap<String, String> = HashMap::new();
     keywords_mapped.insert(String::from("keywords"), keywords);
+    keywords_mapped.insert(String::from("category"), String::from("Blog"));
 
     let site1 = Website::new("ContentGardening".to_string(),
         "contentgardening.com".to_string(),
@@ -127,5 +148,22 @@ fn main() {
     let identifier = "ka-cg-1".to_string();
     prototype.register(identifier, site1);
 
-    // 
+    // println!("{}", prototype.objects[&"ka-cg-1".to_string()].get_info());
+
+    // Prepare to clone site1 with addtional infos
+    let mut site2_add_info: HashMap<String, String> = HashMap::new();
+    site2_add_info.insert("name".to_string(), "ContentGardeningPlayground".to_string());
+    site2_add_info.insert("domain".to_string(), "play.contentgardening.com".to_string());
+    site2_add_info.insert("description".to_string(), "Experimentation for techniques featured on the blog".to_string());
+    site2_add_info.insert("category".to_string(), "Membership site".to_string());
+    site2_add_info.insert("creation_date".to_string(), "2018-08-01".to_string());
+
+    // Clone site1 with addtional infos.
+    let site2 = prototype.clone("ka-cg-1".to_string(), site2_add_info).unwrap();
+
+    println!("{}", prototype.objects[&"ka-cg-1".to_string()].get_info());
+    println!("{}", site2.get_info());
+
+    // https://stackoverflow.com/questions/30157258/does-rust-track-unique-object-ids-and-can-we-print-them
+    println!("Address of site1 in prototype : {:p} != Address of site2 : {:p}", &prototype.objects[&"ka-cg-1".to_string()], &site2);
 }
