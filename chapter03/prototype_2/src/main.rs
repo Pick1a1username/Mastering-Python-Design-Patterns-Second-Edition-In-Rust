@@ -52,18 +52,18 @@ impl Website {
     }
 }
 
-struct Prototype {
-    objects: HashMap<String, Website>,
+struct Prototype<'a> {
+    objects: HashMap<String, &'a Website>,
 }
 
-impl Prototype {
-    fn new() -> Prototype {
+impl<'a> Prototype<'a> {
+    fn new() -> Prototype<'a> {
         Prototype {
             objects: HashMap::new(),
         }
     }
 
-    fn register(&mut self, identifier: String, obj: Website) {
+    fn register(&mut self, identifier: String, obj: &'a Website) {
         self.objects.insert(identifier, obj);
     }
 
@@ -76,9 +76,8 @@ impl Prototype {
 
         match found {
             Some(current_obj) => {
-                let mut new_obj = current_obj.clone();
+                let mut new_obj = (*current_obj).clone();
 
-                // Todo: If the key already exists, it should be overwritten.
                 for (new_key, new_value) in new_infos {
                     new_obj.info.insert(new_key.clone(), new_value.clone());
                 }
@@ -104,31 +103,6 @@ fn sorted_keys(hashmap: &HashMap<String, String>) -> Vec<String> {
     keys
 }
  
-fn sort_string_only_hashmap(hashmap: &mut HashMap<String, String>) {
-    // Get keys
-    let mut keys: Vec<String> = Vec::new();
-    
-    println!("{:?}", hashmap );
-    for key in hashmap.keys() {
-        keys.push(key.clone());
-    }
-    println!("{:?}", keys);
-
-    // Sort key vector
-    keys.sort();
-    println!("{:?}", keys);
- 
-    // Recreate hashmap
-    let mut sorted_hashmap: HashMap<String, String> = HashMap::new();
-    for key in keys {
-        sorted_hashmap.insert(key.clone(), hashmap[&key].clone());
-    }
-
-    // Set the variable to the recreated hashmap
-    *hashmap = sorted_hashmap;
-    println!("{:?}", hashmap );
-}
-
 fn main() {
     // Since HashMap can have the type of value specified in advance,
     // keywords will be set as String comma-breaked.
@@ -146,9 +120,7 @@ fn main() {
 
     let mut prototype = Prototype::new();
     let identifier = "ka-cg-1".to_string();
-    prototype.register(identifier, site1);
-
-    // println!("{}", prototype.objects[&"ka-cg-1".to_string()].get_info());
+    prototype.register(identifier, &site1);
 
     // Prepare to clone site1 with addtional infos
     let mut site2_add_info: HashMap<String, String> = HashMap::new();
@@ -165,5 +137,6 @@ fn main() {
     println!("{}", site2.get_info());
 
     // https://stackoverflow.com/questions/30157258/does-rust-track-unique-object-ids-and-can-we-print-them
-    println!("Address of site1 in prototype : {:p} != Address of site2 : {:p}", &prototype.objects[&"ka-cg-1".to_string()], &site2);
+    println!("Address of site1 : {:p} != Address of site2 : {:p}", &site1, &site2);
+    println!("Address of site1 : {:p}  = Address of site1 in prototype : {:p}", &site1, prototype.objects[&"ka-cg-1".to_string()]);
 }
