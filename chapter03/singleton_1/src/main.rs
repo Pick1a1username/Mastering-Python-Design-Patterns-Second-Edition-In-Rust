@@ -53,8 +53,8 @@ fn main() {
         fetcher.fetch(url.to_string());
     }
 
-
-
-
+    println!("-------");
+    let done_urls = fetcher.dump_url_registry();
+    println!("Done URLs: {}", done_urls);
 
 }
