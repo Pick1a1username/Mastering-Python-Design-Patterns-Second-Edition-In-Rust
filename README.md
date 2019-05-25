@@ -32,8 +32,8 @@ Refer to the original repository's [README.md](https://github.com/PacktPublishin
     -> prototype_2: Website object's reference passed when it is registered to prototype.
   * singletone.py -> Work in Progress. No idea how to implement singleton in Rust.
 * Chapter 4
-  * adapter.py
-  * external.py
+  * adapter.py -> Done
+  * external.py -> Done
 * Chapter 5
   * mymath.py
   * number_sum.py
