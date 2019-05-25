@@ -3,6 +3,9 @@
 // https://rust-lang-nursery.github.io/rust-cookbook/web/clients/requests.html
 // https://docs.rs/reqwest/0.9.17/reqwest/
 
+// Parsing data from web is implemented.
+// But singleton object is not implemented.
+
 extern crate reqwest;
 
 struct URLFetcher {
