@@ -39,7 +39,7 @@ Refer to the original repository's [README.md](https://github.com/PacktPublishin
   * number_sum.py
   * number_sum_naive.py
 * Chapter 6
-  * bridge.py
+  * bridge.py -> Done
 * Chapter 7
   * facade.py
 * Chapter 8
