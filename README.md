@@ -41,7 +41,7 @@ Refer to the original repository's [README.md](https://github.com/PacktPublishin
 * Chapter 6
   * bridge.py -> Done
 * Chapter 7
-  * facade.py
+  * facade.py -> Done
 * Chapter 8
   * flyweight.py
   * lazy.py
