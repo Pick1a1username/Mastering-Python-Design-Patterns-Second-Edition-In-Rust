@@ -5,15 +5,15 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 
-// # Derive
-// 
-// * Debug:
-// * PartialEq:
-// * Eq: 
-// * Hash:
-// * Clone:
-// * Copy:
-//
+/// # Traits
+/// 
+/// * Debug: To print Cartype easily
+/// * PartialEq: To compare CarType
+/// * Eq: To compare CarType
+/// * Hash: To use CarType as value in HashMap
+/// * Clone: To use CarType in the same scope multiple times. Refer to Car.new().
+/// * Copy: To use CarType in the same scope multiple times. Refer to Car.new().
+///
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 enum CarType {
     SubCompact,
@@ -22,28 +22,41 @@ enum CarType {
     Nothing, // Only for Car::init()
 }
 
-// To print car type easily
+/// To print car type easily
 impl fmt::Display for CarType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-         write!(f, "{:?}", self)
+        write!(f, "{:?}", self)
     }
 }
 
-// # Derive
-// 
-// * PartialEq:
-// * Eq: 
-//
+/// # Traits
+/// 
+/// * PartialEq: To compare Car
+/// * Eq: To compare Car
+///
 #[derive(PartialEq, Eq)]
 struct Car {
+    /// The type of pool should be Rc because:
+    /// 
+    /// * all of instances of Car must share same pool.
+    ///
+    /// The RefCell also should be used with Rc because:
+    /// 
+    /// * pool should be able to be updated when new CarType is appeared.
+    ///  
+    /// The value of HashMap of pool, Car, should be Rc because:
+    /// 
+    /// * If there are multiple instances of Car whose car_type are same, there should be only one really instance. The other is nothing but Rc cloned.
+    /// * So when instantiating a Car, if the car type already exists, a cloned Car saved in the pool will be returned.
+    /// 
     pool: Rc<RefCell<HashMap<CarType, Rc<Car>>>>,
     car_type: CarType,
 }
 
 impl Car {
+    /// Add new car type.
     fn new(&self, car_type: CarType) -> Rc<Car> {
-        // self.checker() is needed since car_type cannot be borrowed twice in this scope.
-        match self.checker(&car_type) {
+        match self.pool.borrow().contains_key(&car_type) {
             true => {
                Rc::clone(self.pool.borrow().get(&car_type).unwrap())
             },
@@ -64,21 +77,20 @@ impl Car {
         }
     }
 
-    // Additional function
-    // Struct cannot have any variable in Rust as opposed to Class in Python.
+    /// Additional function not in the Python code.
+    ///
+    /// Struct cannot have any variable in Rust as opposed to Class in Python.
     fn init() -> Rc<Car> {
         let new_pool: HashMap<CarType, Rc<Car>> = HashMap::new();
         let new_car = Rc::new(
             Car {
                 pool: Rc::new(RefCell::new(new_pool)),
+                // When Car is initialized, no car type specified.
+                // Since Car.car_type's type is CarType, any Variant should be specified. And this is why 'Nothing' Variant exists.
                 car_type: CarType::Nothing,
             }
         );
         Rc::clone(&new_car)
-    }
-
-    fn checker(&self, car_type: &CarType) -> bool {
-        self.pool.borrow().contains_key(&car_type)
     }
 
     fn render(&self, color: String, x: i32, y: i32) {
@@ -91,15 +103,15 @@ impl Car {
     }     
 }
 
-// To get address of instance
+/// To get address of a instance
 impl fmt::Pointer for Car {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:p}", self as *const Car)
     }
 }
 
-// rand crate has no feature to select an element randomly in array as opposed to random module in Python.
-// So creating a function to select a color is more clear.
+/// rand crate has no feature to select an element randomly in array as opposed to random module in Python.
+/// So creating a function to select a color is much more clear.
 fn color_generator() -> String {
     let colors = ["white","black","silver","gray","red","blue","brown","beige","yellow","green"];
     let (min, max) = (0, colors.len());
@@ -109,6 +121,7 @@ fn color_generator() -> String {
     colors[rng.gen_range(min, max)].to_string()
 }
     
+/// This function is almost same as Python code.
 fn main() {
     let mut rng = rand::thread_rng();
     let (min_point, max_point) = (0, 100);
