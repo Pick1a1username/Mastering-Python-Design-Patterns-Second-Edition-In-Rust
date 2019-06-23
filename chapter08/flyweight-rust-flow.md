@@ -1,6 +1,6 @@
 # Flyweight in Rust
 
-The material shows how instances are generated in Rust.
+This material shows how instances are generated in Rust.
 
 
 ## 1
