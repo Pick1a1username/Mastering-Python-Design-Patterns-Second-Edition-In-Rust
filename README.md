@@ -43,7 +43,7 @@ Refer to the original repository's [README.md](https://github.com/PacktPublishin
 * Chapter 7
   * facade.py -> Done
 * Chapter 8
-  * flyweight.py
+  * flyweight.py -> Done
   * lazy.py
   * mvc.py -> Done
   * proxy.py
