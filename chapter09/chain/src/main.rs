@@ -1,7 +1,7 @@
 /// This code assumes that:
 /// 
 /// * MainWindow has no parent.
-/// * Widgets without MainWindow need their parent widget.
+/// * Widgets except for MainWindow need their parent widget.
 /// 
 
 use std::rc::Rc;
