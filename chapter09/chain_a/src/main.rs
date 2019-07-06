@@ -53,8 +53,9 @@ impl Widget for MainWindow {
 }
 
 impl MainWindow {
-    fn new(parent: Option<Rc<Box<dyn Widget>>>) -> Self {
-        MainWindow { parent: parent }
+    // MainWindow is the top widget. So it has not parent.
+    fn new() -> Self {
+        MainWindow { parent: None }
     }
 }
 
@@ -111,7 +112,7 @@ impl<T> MsgText<T> {
 }
 
 fn main() {
-    let mw = Rc::new(Box::new(MainWindow::new(None)));
+    let mw = Rc::new(Box::new(MainWindow::new()));
     let sd = Rc::new(Box::new(SendDialog::new(Some(Rc::clone(&mw)))));
     let msg = Rc::new(Box::new(MsgText::new(Some(Rc::clone(&sd)))));
  
