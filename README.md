@@ -49,8 +49,7 @@ Refer to the original repository's [README.md](https://github.com/PacktPublishin
   * proxy.py
 * Chapter 9
   * chain.py -> Done
-    -> chain_a -> It works. But I have no idea why it works.
-    -> chain_b -> Work in progress
+    -> It works. But I have no idea why it works.
 * Chapter 10
   * command.py
   * first-class.py
