@@ -48,7 +48,9 @@ Refer to the original repository's [README.md](https://github.com/PacktPublishin
   * mvc.py -> Done
   * proxy.py
 * Chapter 9
-  * chain.py
+  * chain.py -> Done
+    -> chain_a -> It works. But I have no idea why it works.
+    -> chain_b -> Work in progress
 * Chapter 10
   * command.py
   * first-class.py
