@@ -1,3 +1,9 @@
+/// This code assumes that:
+/// 
+/// * MainWindow has no parent.
+/// * Widgets without MainWindow need their parent widget.
+/// 
+
 use std::rc::Rc;
 use std::fmt;
 
@@ -52,7 +58,6 @@ impl Widget for MainWindow {
 }
 
 impl MainWindow {
-    // MainWindow is the top widget. So it has not parent.
     fn new() -> Self {
         MainWindow { parent: None }
     }
