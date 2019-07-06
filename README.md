@@ -48,7 +48,8 @@ Refer to the original repository's [README.md](https://github.com/PacktPublishin
   * mvc.py -> Done
   * proxy.py
 * Chapter 9
-  * chain.py
+  * chain.py -> Done
+    -> It works. But I have no idea why it works.
 * Chapter 10
   * command.py
   * first-class.py
