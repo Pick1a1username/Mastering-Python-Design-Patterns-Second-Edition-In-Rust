@@ -47,7 +47,6 @@ impl Widget for MainWindow {
     
     // Override trait's function
     fn handle_default(&self, event: Event) -> Result<String, UnhandledEvent> {
-        // Todo: Print event's name
         Ok(format!("MainWindow Default: {}", event))
     }
 }
