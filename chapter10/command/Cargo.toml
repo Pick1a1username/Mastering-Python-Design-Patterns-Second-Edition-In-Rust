@@ -1,0 +1,11 @@
+[package]
+name = "command"
+version = "0.1.0"
+authors = ["Pick1a1username <20301273+Pick1a1username@users.noreply.github.com>"]
+edition = "2018"
+
+[dependencies]
+clap = "2.32"
+flexi_logger = "0.13.3"
+log = "0.4"
+
