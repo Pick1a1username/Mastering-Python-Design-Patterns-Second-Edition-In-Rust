@@ -196,6 +196,8 @@ fn main() {
         // ReadFile has no undo() function.
         // read_file.undo();
         create_file.undo();
+    } else {
+        info!("the result is '{}'", new_name.to_str().unwrap());
     }
 
     info!("finished");
