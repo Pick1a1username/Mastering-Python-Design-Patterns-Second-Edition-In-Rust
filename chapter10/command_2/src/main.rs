@@ -1,6 +1,8 @@
 use std::fs;
 use std::io;
-use std::io::{Error, ErrorKind, Write};
+use std::error::Error;
+use std::fmt;
+use std::io::{Write};
 use std::path::Path;
 
 use clap::{crate_authors, crate_description, crate_name, crate_version, Arg, App};
@@ -8,13 +10,21 @@ use flexi_logger::{Duplicate,Logger};
 use log::info;
 
 
-trait Command {
-    fn execute(&self) -> Result<(), Error>;
-    fn can_be_undo(&self) -> bool;
+#[derive(Debug)]
+struct Undoable;
+
+impl Error for Undoable {}
+
+impl fmt::Display for Undoable {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 
-trait Undo: Command {
-    fn undo(&self) -> Result<(), Error>;
+trait Command {
+    fn execute(&self) -> Result<(), Box<dyn Error>>;
+    fn can_be_undo(&self) -> bool;
+    fn undo(&self) -> Result<(), Box<dyn Error>>;
 }
 
 struct CreateFile<'a> {
@@ -41,18 +51,23 @@ impl<'a> Command for CreateFile<'a> {
     }
 
     /// Todo: Add a feature checking whether the file already exists or not.
-    fn execute(&self) -> Result<(), Error> {
+    fn execute(&self) -> Result<(), Box<dyn Error>> {
         info!("creating file '{}'", self.path.to_str().unwrap());
         fs::write(self.path, &self.text)?;
         Ok(())
     }
-}
 
-impl<'a> Undo for CreateFile<'a> {
-    fn undo(&self) -> Result<(), Error> {
+    fn undo(&self) -> Result<(), Box<dyn Error>> {
         info!("removing file '{}'", self.path.to_str().unwrap());
-        delete_file(self.path)?;
-        Ok(())
+        match self.can_be_undo() {
+            true => {
+                delete_file(self.path)?;
+                Ok(())
+            },
+            false => {
+                Err(Box::new(Undoable))
+            },
+        }
     }
 }
 
@@ -79,20 +94,26 @@ impl<'a> Command for RenameFile<'a> {
         self.undo
     }
 
-    fn execute(&self) -> Result<(), Error> {
+    fn execute(&self) -> Result<(), Box<dyn Error>> {
         info!("renaming '{}' to '{}'", self.src.to_str().unwrap(), self.dest.to_str().unwrap());
         fs::rename(self.src, self.dest)?;
         Ok(())
     }
-}
 
-impl<'a> Undo for RenameFile<'a> {
-    fn undo(&self) -> Result<(), Error> {
+    fn undo(&self) -> Result<(), Box<dyn Error>> {
         info!("renaming '{}' to '{}'", self.dest.to_str().unwrap(), self.src.to_str().unwrap());
-        fs::rename(self.dest, self.src)?;
-        Ok(())
+        match self.can_be_undo() {
+            true => {
+                fs::rename(self.dest, self.src)?;
+                Ok(())
+            },
+            false => {
+                Err(Box::new(Undoable))
+            }
+        }
     }
 }
+
 
 struct ReadFile<'a> {
     undo: bool,
@@ -114,16 +135,19 @@ impl<'a> Command for ReadFile<'a> {
         self.undo
     }
 
-    fn execute(&self) -> Result<(), Error> {
+    fn execute(&self) -> Result<(), Box<dyn Error>> {
         info!("reading file '{}'", self.path.to_str().unwrap());
         let contents = fs::read_to_string(self.path)?;
         println!("{}", contents);
         Ok(())
     }
+
+    fn undo(&self) -> Result<(), Box<dyn Error>> {
+        Err(Box::new(Undoable))
+    }
 }
 
-fn delete_file(path: &Path) -> Result<(), Error> {
-    info!("deleting file '{}'", path.to_str().unwrap());
+fn delete_file(path: &Path) -> Result<(), Box<dyn Error>> {
     fs::remove_file(path)?;
     Ok(())
 }
@@ -181,18 +205,10 @@ fn main() {
     let answer = String::from(answer.trim_end_matches("\n"));
 
     if answer == "y" {
-        let mut commands_reversed: Vec<Box<dyn Undo>> = Vec::new();
+        commands.reverse();
 
-        while let Some(c) = commands.pop() {
-            if c.can_be_undo() {
-                let c_deref: Box<dyn Undo> = Box::new(*c);
-                commands_reversed.push(c_deref);
-            } else {
-                info!("there is something cannot undo!");
-            }
-        }
-
-        for c in commands_reversed {
+        for c in commands.iter() {
+            // Todo: Investigate why no error occurs even if the command is undoable.
             c.undo();
         }
     } else {
@@ -201,7 +217,6 @@ fn main() {
 
     info!("finished");
 }
-
 
 
 fn test_create_file(undo: bool) {
