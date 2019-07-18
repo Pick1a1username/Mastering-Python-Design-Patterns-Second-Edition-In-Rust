@@ -1,16 +1,42 @@
-use std::error::Error;
-use std::fmt;
-use std::fs;
-use std::path::Path;
+//! # Command Pattern (2)
+//! 
+//! This module is an example of command pattern based on the code written in Python.
+//! The original Python code is [this](https://github.com/PacktPublishing/Mastering-Python-Design-Patterns-Second-Edition/blob/master/chapter10/command.py).
+//!
+//! This example has the following commands:
+//!
+//! * CreateFile: Create a file.
+//! * ReadFile: Read a file's content.
+//! * RenameFile: Rename a file.
+//! 
+//! Also, there is a function that doesn't need to be Struct:
+//! 
+//! * delete_file: Delete a file.
+//! 
+//! Most of codes are same as Python's one. But some parts are different because of:
+//! 
+//! * ease of test automation.
+//! * difference of Rust and Python.
+//! * improvements which can be easily implemented.
+//! * using crates which I have learned from other books.
+//! 
 
-use log::info;
+use std::error::Error; // For creating a custom error type.
+use std::fmt; // For creating a custom error type.
+use std::fs; // For handling files.
+use std::path::Path; // For handling file's path easily.
 
+use log::info; // For logging.
 
+/// Command's result when it is executed successfully.
 pub enum Answer {
+    /// For a result when there is nothing to return.
     SUCCEED,
-    Content(String),
+    /// For a result when there is something to return as String.
+    Content(String), 
 }
 
+/// Error when a command cannot be undone.
 #[derive(Debug)]
 struct Undoable;
 
@@ -22,22 +48,28 @@ impl fmt::Display for Undoable {
     }
 }
 
+/// Execute a command and (optionally) undo a command.
 pub trait Command {
     fn execute(&self) -> Result<Answer, Box<dyn Error>>;
     fn can_be_undo(&self) -> bool;
     fn undo(&self) -> Result<Answer, Box<dyn Error>>;
 }
 
+/// Create a file.
 #[derive(Debug)]
 pub struct CreateFile<'a> {
+    /// Whether the command can be undone or not.
     undo: bool,
-    // https://stackoverflow.com/questions/35296336/e0277-sized-is-not-implemented-for-the-type-u8-but-my-type-does-not-have-a
+    /// File's name and path.
     path: &'a Path,
+    /// Text that will be written to the file.
     text: String,
 }
 
 impl<'a> CreateFile<'a> {
-    // Note that, as opposed to the original code, text parameter should be specified.
+    /// Initialize a CreateFile command.
+    /// 
+    /// As opposed to the original code, text parameter should be specified.
     pub fn new(path: &Path, text: String) -> CreateFile {
         CreateFile {
             undo: true,
@@ -48,10 +80,16 @@ impl<'a> CreateFile<'a> {
 }
 
 impl<'a> Command for CreateFile<'a> {
+    /// Return whether the command can be undone or not.
+    /// 
+    /// * `true`: doable.
+    /// * `false`: undoable.
     fn can_be_undo(&self) -> bool {
         self.undo
     }
 
+    /// Execute the command.
+    /// 
     /// Todo: Add a feature checking whether the file already exists or not.
     fn execute(&self) -> Result<Answer, Box<dyn Error>> {
         info!("creating file '{}'", self.path.to_str().unwrap());
@@ -59,6 +97,7 @@ impl<'a> Command for CreateFile<'a> {
         Ok(Answer::SUCCEED)
     }
 
+    /// Undo the command.
     fn undo(&self) -> Result<Answer, Box<dyn Error>> {
         info!("removing file '{}'", self.path.to_str().unwrap());
         match self.can_be_undo() {

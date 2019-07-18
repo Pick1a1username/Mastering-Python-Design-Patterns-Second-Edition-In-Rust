@@ -2,11 +2,12 @@ use std::io;
 use std::io::Write;
 use std::path::Path;
 
+// For getting parameters from command-line and getting app's info.
 use clap::{crate_authors, crate_description, crate_name, crate_version, Arg, App};
-use flexi_logger::{Duplicate,Logger};
-use log::info;
+use flexi_logger::{Duplicate,Logger};  // For logging
+use log::info; // For logging
 
-// Import Traits, Structs and Functions from lib.rs
+// For import Traits, Structs and Functions from lib.rs
 use command_2::{Command, CreateFile, ReadFile, RenameFile};
 
 fn main() {
