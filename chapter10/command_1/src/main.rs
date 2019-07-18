@@ -123,7 +123,6 @@ impl<'a> Command for ReadFile<'a> {
 }
 
 fn delete_file(path: &Path) -> Result<(), Error> {
-    info!("deleting file '{}'", path.to_str().unwrap());
     fs::remove_file(path)?;
     Ok(())
 }

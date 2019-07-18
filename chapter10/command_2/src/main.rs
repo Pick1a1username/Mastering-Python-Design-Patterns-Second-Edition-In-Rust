@@ -27,6 +27,7 @@ trait Command {
     fn undo(&self) -> Result<(), Box<dyn Error>>;
 }
 
+#[derive(Debug)]
 struct CreateFile<'a> {
     undo: bool,
     // https://stackoverflow.com/questions/35296336/e0277-sized-is-not-implemented-for-the-type-u8-but-my-type-does-not-have-a
@@ -72,6 +73,7 @@ impl<'a> Command for CreateFile<'a> {
 }
 
 
+#[derive(Debug)]
 struct RenameFile<'a> {
     undo: bool,
     src: &'a Path,
@@ -115,6 +117,7 @@ impl<'a> Command for RenameFile<'a> {
 }
 
 
+#[derive(Debug)]
 struct ReadFile<'a> {
     undo: bool,
     path: &'a Path,
@@ -193,7 +196,10 @@ fn main() {
 
     // Execute commands.
     for c in commands.iter() {
-        c.execute();
+        match c.execute() {
+            Ok(_) => { continue; },
+            Err(e) => { info!("Something went wrong: {:?}", e); },
+        }
     }
 
     // Execute undo reversely if the user wants.
@@ -208,8 +214,10 @@ fn main() {
         commands.reverse();
 
         for c in commands.iter() {
-            // Todo: Investigate why no error occurs even if the command is undoable.
-            c.undo();
+            match c.undo() {
+                Ok(_) => { continue; },
+                Err(e) => { info!("Something went wrong: {:?}", e); },
+            }
         }
     } else {
         info!("the result is '{}'", new_name.to_str().unwrap());
@@ -225,9 +233,10 @@ fn test_create_file(undo: bool) {
     let path = Path::new("test_create_file.txt");
     let create_file = CreateFile::new(&path, "aaa".to_string());
 
-    create_file.execute();
+    create_file.execute().unwrap();
+        
     if undo == true {
-        create_file.undo();
+        create_file.undo().unwrap();
     }
 }
 
@@ -236,7 +245,7 @@ fn test_read_file() {
 
     let path = Path::new("test.txt");
     let read_file = ReadFile::new(path);
-    read_file.execute();
+    read_file.execute().unwrap();
 }
 
 fn test_rename_file() {
@@ -245,7 +254,7 @@ fn test_rename_file() {
     let src_path = Path::new("test.txt");
     let dest_path = Path::new("test_renamed.txt");
     let rename_file = RenameFile::new(src_path, dest_path);
-    rename_file.execute();
+    rename_file.execute().unwrap();
 }
 
 // Note: Make sure that the file will be deleted exists.
@@ -253,5 +262,5 @@ fn test_delete_file() {
     println!("Testing delete_file()...");
 
     let path = Path::new("test_will_be_deleted.txt");
-    delete_file(path);
+    delete_file(path).unwrap();
 }
