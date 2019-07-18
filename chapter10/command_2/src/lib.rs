@@ -1,10 +1,15 @@
-use std::fs;
 use std::error::Error;
 use std::fmt;
+use std::fs;
 use std::path::Path;
 
 use log::info;
 
+
+pub enum Answer {
+    SUCCEED,
+    Content(String),
+}
 
 #[derive(Debug)]
 struct Undoable;
@@ -18,9 +23,9 @@ impl fmt::Display for Undoable {
 }
 
 pub trait Command {
-    fn execute(&self) -> Result<(), Box<dyn Error>>;
+    fn execute(&self) -> Result<Answer, Box<dyn Error>>;
     fn can_be_undo(&self) -> bool;
-    fn undo(&self) -> Result<(), Box<dyn Error>>;
+    fn undo(&self) -> Result<Answer, Box<dyn Error>>;
 }
 
 #[derive(Debug)]
@@ -48,18 +53,18 @@ impl<'a> Command for CreateFile<'a> {
     }
 
     /// Todo: Add a feature checking whether the file already exists or not.
-    fn execute(&self) -> Result<(), Box<dyn Error>> {
+    fn execute(&self) -> Result<Answer, Box<dyn Error>> {
         info!("creating file '{}'", self.path.to_str().unwrap());
         fs::write(self.path, &self.text)?;
-        Ok(())
+        Ok(Answer::SUCCEED)
     }
 
-    fn undo(&self) -> Result<(), Box<dyn Error>> {
+    fn undo(&self) -> Result<Answer, Box<dyn Error>> {
         info!("removing file '{}'", self.path.to_str().unwrap());
         match self.can_be_undo() {
             true => {
                 delete_file(self.path)?;
-                Ok(())
+                Ok(Answer::SUCCEED)
             },
             false => {
                 Err(Box::new(Undoable))
@@ -92,18 +97,18 @@ impl<'a> Command for RenameFile<'a> {
         self.undo
     }
 
-    fn execute(&self) -> Result<(), Box<dyn Error>> {
+    fn execute(&self) -> Result<Answer, Box<dyn Error>> {
         info!("renaming '{}' to '{}'", self.src.to_str().unwrap(), self.dest.to_str().unwrap());
         fs::rename(self.src, self.dest)?;
-        Ok(())
+        Ok(Answer::SUCCEED)
     }
 
-    fn undo(&self) -> Result<(), Box<dyn Error>> {
+    fn undo(&self) -> Result<Answer, Box<dyn Error>> {
         info!("renaming '{}' to '{}'", self.dest.to_str().unwrap(), self.src.to_str().unwrap());
         match self.can_be_undo() {
             true => {
                 fs::rename(self.dest, self.src)?;
-                Ok(())
+                Ok(Answer::SUCCEED)
             },
             false => {
                 Err(Box::new(Undoable))
@@ -134,21 +139,22 @@ impl<'a> Command for ReadFile<'a> {
         self.undo
     }
 
-    fn execute(&self) -> Result<(), Box<dyn Error>> {
+    fn execute(&self) -> Result<Answer, Box<dyn Error>> {
         info!("reading file '{}'", self.path.to_str().unwrap());
         let contents = fs::read_to_string(self.path)?;
         println!("{}", contents);
-        Ok(())
+        // The content is returned as well for test automation.
+        Ok(Answer::Content(contents))
     }
 
-    fn undo(&self) -> Result<(), Box<dyn Error>> {
+    fn undo(&self) -> Result<Answer, Box<dyn Error>> {
         Err(Box::new(Undoable))
     }
 }
 
-fn delete_file(path: &Path) -> Result<(), Box<dyn Error>> {
+fn delete_file(path: &Path) -> Result<Answer, Box<dyn Error>> {
     fs::remove_file(path)?;
-    Ok(())
+    Ok(Answer::SUCCEED)
 }
 
 
@@ -159,13 +165,11 @@ mod tests {
     // use std::path::Path;
     use super::*;
 
-
-    // Work in Progress
     #[test]
     fn struct_create_file() {
-
+        let contents_expected = String::from("test content");
         let path = Path::new("test_create_file.txt");
-        let create_file = CreateFile::new(&path, "aaa".to_string());
+        let create_file = CreateFile::new(&path, contents_expected.clone());
 
         // Create the file
         create_file.execute().unwrap();
@@ -174,8 +178,14 @@ mod tests {
         assert_eq!(fs::metadata(&path).unwrap().is_file(), true);
         
         // Verify the content of the file.
-        // Todo: Changing ReadFile to return the content, not printing.
-        // assert_eq!(, );
+        match ReadFile::new(path).execute().unwrap() {
+            Answer::Content(contents_result) => {
+                assert_eq!(contents_result, contents_expected);
+            },
+            _ => {
+                assert!(false);
+            },
+        }
 
         // Undo creating the file.
         create_file.undo().unwrap();
@@ -185,23 +195,34 @@ mod tests {
 
     }
 
-    // Work in Progress
-    // #[test]
-    // fn struct_read_file() {
+    #[test]
+    fn struct_read_file() {
+        let contents_expected = String::from("test content");
+        let path = Path::new("test_read_file.txt");
+        let create_file = CreateFile::new(&path, contents_expected.clone());
 
-    //     let path = Path::new("test.txt");
-    //     let read_file = ReadFile::new(path);
-    //     read_file.execute().unwrap();
+        // Create the file
+        create_file.execute().unwrap();
+            
+        // Verify the content of the file.
+        match ReadFile::new(path).execute().unwrap() {
+            Answer::Content(contents_result) => {
+                assert_eq!(contents_result, contents_expected);
+            },
+            _ => {
+                assert!(false);
+            },
+        }
 
-    //     // Verify the content is same as expected.
-
-    // }
+        // Undo creating the file.
+        create_file.undo().unwrap();
+    }
 
     #[test]
     fn struct_rename_file() {
 
-        let src_path = Path::new("test.txt");
-        let dest_path = Path::new("test_renamed.txt");
+        let src_path = Path::new("test_before.txt");
+        let dest_path = Path::new("test_after.txt");
 
         // Before the test, make sure that the file whose name is same as dest_path doesn't exist.
         assert_eq!(fs::metadata(&dest_path).is_err(), true);
@@ -227,11 +248,10 @@ mod tests {
         create_file.undo().unwrap();
     }
 
-    // Work in Progress
     #[test]
     fn fn_delete_file() {
 
-        let path = Path::new("test_will_be_deleted.txt");
+        let path = Path::new("test_delete_file.txt");
         
         // Create the file
         let create_file = CreateFile::new(&path, "aaa".to_string());

@@ -32,13 +32,6 @@ fn main() {
             .unwrap_or_else(|e| panic!("Logger initialization failed with {}", e));
     }
 
-    // The following functions are for unit test.
-    //
-    // test_create_file(true);
-    // test_read_file();
-    // test_rename_file();
-    // test_delete_file();
-
     // Set file names.
     let (orig_name, new_name) = (Path::new("file1"), Path::new("file2"));
 
