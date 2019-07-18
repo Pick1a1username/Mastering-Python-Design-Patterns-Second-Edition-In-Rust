@@ -156,56 +156,92 @@ fn delete_file(path: &Path) -> Result<(), Box<dyn Error>> {
 #[cfg(test)]
 mod tests {
 
+    // use std::path::Path;
+    use super::*;
+
+
     // Work in Progress
     #[test]
-    fn create_file() {
+    fn struct_create_file() {
 
         let path = Path::new("test_create_file.txt");
         let create_file = CreateFile::new(&path, "aaa".to_string());
 
+        // Create the file
         create_file.execute().unwrap();
             
         // Verify the file created.
+        assert_eq!(fs::metadata(&path).unwrap().is_file(), true);
+        
+        // Verify the content of the file.
+        // Todo: Changing ReadFile to return the content, not printing.
+        // assert_eq!(, );
 
-        if undo == true {
-            create_file.undo().unwrap();
-        }
+        // Undo creating the file.
+        create_file.undo().unwrap();
 
         // Verify the file deleted.
+        assert_eq!(fs::metadata(&path).is_err(), true);
 
     }
 
     // Work in Progress
+    // #[test]
+    // fn struct_read_file() {
+
+    //     let path = Path::new("test.txt");
+    //     let read_file = ReadFile::new(path);
+    //     read_file.execute().unwrap();
+
+    //     // Verify the content is same as expected.
+
+    // }
+
     #[test]
-    fn read_file() {
-
-        let path = Path::new("test.txt");
-        let read_file = ReadFile::new(path);
-        read_file.execute().unwrap();
-
-        // Verify the content is same as expected.
-
-    }
-
-    // Work in Progress
-    #[test]
-    fn rename_file() {
-
+    fn struct_rename_file() {
 
         let src_path = Path::new("test.txt");
         let dest_path = Path::new("test_renamed.txt");
+
+        // Before the test, make sure that the file whose name is same as dest_path doesn't exist.
+        assert_eq!(fs::metadata(&dest_path).is_err(), true);
+
+        // Create the file
+        let create_file = CreateFile::new(&src_path, "aaa".to_string());
+        create_file.execute().unwrap();
+
+        // Rename the file
         let rename_file = RenameFile::new(src_path, dest_path);
         rename_file.execute().unwrap();
 
-        
+        // Verify the file's name is changed.
+        assert_eq!(fs::metadata(&dest_path).unwrap().is_file(), true);
+
+        // Undo renaming the file.
+        rename_file.undo().unwrap();
+
+        // Verify renaming is undone.
+        assert_eq!(fs::metadata(&src_path).unwrap().is_file(), true);
+
+        // Delete the file
+        create_file.undo().unwrap();
     }
 
     // Work in Progress
     #[test]
-    fn delete_file() {
+    fn fn_delete_file() {
 
         let path = Path::new("test_will_be_deleted.txt");
+        
+        // Create the file
+        let create_file = CreateFile::new(&path, "aaa".to_string());
+        create_file.execute().unwrap();
+
+        // Delete the file
         delete_file(path).unwrap();
+
+        // Verify the file is deleted.
+        assert_eq!(fs::metadata(&path).is_err(), true);
     }
 }
 
