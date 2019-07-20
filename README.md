@@ -26,10 +26,8 @@ Refer to the original repository's [README.md](https://github.com/PacktPublishin
   * exercise_fluent_builder.py -> Done
 * Chapter 3
   * prototype.py -> Done
-
-    -> prototype_1: Website object itself passed when it is registered to prototype.
-
-    -> prototype_2: Website object's reference passed when it is registered to prototype.
+    * prototype_1: Website object itself passed when it is registered to prototype.
+    * prototype_2: Website object's reference passed when it is registered to prototype.
   * singletone.py -> Work in Progress. No idea how to implement singleton in Rust.
 * Chapter 4
   * adapter.py -> Done
@@ -52,6 +50,8 @@ Refer to the original repository's [README.md](https://github.com/PacktPublishin
     -> It works. But I have no idea why it works.
 * Chapter 10
   * command.py
+    * command_1: Simple implementation.
+    * command_2: More than the original.
   * first-class.py
 * Chapter 11
   * observer.py
