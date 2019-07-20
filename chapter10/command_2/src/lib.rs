@@ -38,11 +38,11 @@ pub enum Answer {
 
 /// Error when a command cannot be undone.
 #[derive(Debug)]
-struct Undoable;
+struct NotUndoable;
 
-impl Error for Undoable {}
+impl Error for NotUndoable {}
 
-impl fmt::Display for Undoable {
+impl fmt::Display for NotUndoable {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}", self)
     }
@@ -50,12 +50,17 @@ impl fmt::Display for Undoable {
 
 /// Execute a command and (optionally) undo a command.
 pub trait Command {
+    /// Execute a command.
     fn execute(&self) -> Result<Answer, Box<dyn Error>>;
+    /// Return whether a command can be undone or not.
     fn can_be_undo(&self) -> bool;
+    /// Undo a command.
     fn undo(&self) -> Result<Answer, Box<dyn Error>>;
 }
 
 /// Create a file.
+/// 
+/// This is NotUndoable.
 #[derive(Debug)]
 pub struct CreateFile<'a> {
     /// Whether the command can be undone or not.
@@ -83,7 +88,7 @@ impl<'a> Command for CreateFile<'a> {
     /// Return whether the command can be undone or not.
     /// 
     /// * `true`: doable.
-    /// * `false`: undoable.
+    /// * `false`: NotUndoable.
     fn can_be_undo(&self) -> bool {
         self.undo
     }
@@ -106,22 +111,29 @@ impl<'a> Command for CreateFile<'a> {
                 Ok(Answer::SUCCEED)
             },
             false => {
-                Err(Box::new(Undoable))
+                Err(Box::new(NotUndoable))
             },
         }
     }
 }
 
-
+/// Rename a file.
+/// 
+/// This is NotUndoable.
 #[derive(Debug)]
 pub struct RenameFile<'a> {
+    /// Whether the command can be undone or not.
     undo: bool,
+    /// File's name and path that will be renamed.
     src: &'a Path,
+    /// File's new name.
     dest: &'a Path,
 }
 
 impl<'a> RenameFile<'a> {
-    // I have no idea why lifetime parameters are needed in this function as opposed to new() in CreateFile.
+    /// Initialize a CreateFile command.
+    ///
+    /// I have no idea why lifetime parameters are needed in this function as opposed to new() in CreateFile.
     pub fn new(src: &'a Path, dest: &'a Path) -> RenameFile<'a> {
         RenameFile {
             undo: true,
@@ -132,16 +144,22 @@ impl<'a> RenameFile<'a> {
 }
 
 impl<'a> Command for RenameFile<'a> {
+    /// Return whether the command can be undone or not.
+    /// 
+    /// * `true`: doable.
+    /// * `false`: NotUndoable.
     fn can_be_undo(&self) -> bool {
         self.undo
     }
 
+    /// Execute the command.
     fn execute(&self) -> Result<Answer, Box<dyn Error>> {
         info!("renaming '{}' to '{}'", self.src.to_str().unwrap(), self.dest.to_str().unwrap());
         fs::rename(self.src, self.dest)?;
         Ok(Answer::SUCCEED)
     }
 
+    /// Undo the command.
     fn undo(&self) -> Result<Answer, Box<dyn Error>> {
         info!("renaming '{}' to '{}'", self.dest.to_str().unwrap(), self.src.to_str().unwrap());
         match self.can_be_undo() {
@@ -150,21 +168,26 @@ impl<'a> Command for RenameFile<'a> {
                 Ok(Answer::SUCCEED)
             },
             false => {
-                Err(Box::new(Undoable))
+                Err(Box::new(NotUndoable))
             }
         }
     }
 }
 
-
+/// Read a file.
+/// 
+/// This is not NotUndoable.
 #[derive(Debug)]
 pub struct ReadFile<'a> {
+    /// Whether the command can be undone or not.
     undo: bool,
+    /// File's name and path.
     path: &'a Path,
 }
 
 
 impl<'a> ReadFile<'a> {
+    /// Initialize a CreateFile command.
     pub fn new(path: &Path) -> ReadFile {
         ReadFile {
             undo: false,
@@ -174,10 +197,15 @@ impl<'a> ReadFile<'a> {
 }
 
 impl<'a> Command for ReadFile<'a> {
+    /// Return whether the command can be undone or not.
+    /// 
+    /// * `true`: doable.
+    /// * `false`: NotUndoable.
     fn can_be_undo(&self) -> bool {
         self.undo
     }
 
+    /// Execute the command.
     fn execute(&self) -> Result<Answer, Box<dyn Error>> {
         info!("reading file '{}'", self.path.to_str().unwrap());
         let contents = fs::read_to_string(self.path)?;
@@ -186,22 +214,25 @@ impl<'a> Command for ReadFile<'a> {
         Ok(Answer::Content(contents))
     }
 
+    /// Undo the command.
     fn undo(&self) -> Result<Answer, Box<dyn Error>> {
-        Err(Box::new(Undoable))
+        Err(Box::new(NotUndoable))
     }
 }
 
+/// Delete a file.
+/// 
+/// This is not a struct and not NotUndoable.
 fn delete_file(path: &Path) -> Result<Answer, Box<dyn Error>> {
     fs::remove_file(path)?;
     Ok(Answer::SUCCEED)
 }
 
 
-// Work in Progress
+
 #[cfg(test)]
 mod tests {
 
-    // use std::path::Path;
     use super::*;
 
     #[test]
@@ -221,6 +252,7 @@ mod tests {
             Answer::Content(contents_result) => {
                 assert_eq!(contents_result, contents_expected);
             },
+            // Anythign else is unexpected, and the test is considered as fail.
             _ => {
                 assert!(false);
             },
@@ -248,6 +280,7 @@ mod tests {
             Answer::Content(contents_result) => {
                 assert_eq!(contents_result, contents_expected);
             },
+            // Anythign else is unexpected, and the test is considered as fail.
             _ => {
                 assert!(false);
             },
