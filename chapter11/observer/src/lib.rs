@@ -29,7 +29,7 @@ impl fmt::Display for NotExist {
 
 
 pub trait Publisher {
-    fn add(&mut self, observer: Rc<Box<dyn Observer>>) -> Result<(), Box<dyn Error>>;
+    fn add(&mut self, observer: Box<dyn Observer>) -> Result<(), Box<dyn Error>>;
     fn remove(&mut self, observer: String) -> Result<(), Box<dyn Error>>;
     fn notify(&self);
     fn get_info(&self) -> String;
@@ -38,7 +38,7 @@ pub trait Publisher {
 }
 
 pub struct DefaultFormatter {
-    observers: Vec<Rc<Box<dyn Observer>>>,
+    observers: Vec<Box<dyn Observer>>,
     name: String,
     data: i32,
 }
@@ -54,14 +54,14 @@ impl DefaultFormatter {
 }
 
 impl Publisher for DefaultFormatter {
-    fn add(&mut self, observer: Rc<Box<dyn Observer>>) -> Result<(), Box<dyn Error>> {
+    fn add(&mut self, observer: Box<dyn Observer>) -> Result<(), Box<dyn Error>> {
         // If there's a observer whose name is same as new observer, return error.
         for obs in self.observers.iter() {
             if obs.get_name() == observer.get_name() {
                 return Err(Box::new(AlreadyExist));
             }
         }
-        self.observers.push(Rc::clone(&observer));
+        self.observers.push(observer);
         return Ok(());
     }
 

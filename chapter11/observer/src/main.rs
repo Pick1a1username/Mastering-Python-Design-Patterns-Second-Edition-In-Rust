@@ -7,8 +7,8 @@ fn main() {
     println!("{}", &df.get_info());
 
     println!("");
-    let hf: Rc<Box<dyn Observer>> = Rc::new(Box::new(HexFormatterObs::new()));
-    df.add(Rc::clone(&hf));
+    let hf = Box::new(HexFormatterObs::new());
+    df.add(hf);
     df.set_data(3);
     println!("{}", df.get_info());
 }
