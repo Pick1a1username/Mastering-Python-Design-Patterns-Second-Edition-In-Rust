@@ -102,6 +102,7 @@ impl Publisher for DefaultFormatter {
 
     fn set_data(&mut self, new_data: i32) {
         self.data = new_data;
+        self.notify();
     }
 }
 
@@ -126,7 +127,31 @@ impl Observer for HexFormatterObs {
     }
 
     fn notify(&self, publisher_name: &String, data: &i32) {
-        println!("{}: '{}' has now hex data = {:x}",
+        println!("{}: '{}' has now hex data = {:#x}",
+            self.name,
+            publisher_name,
+            data
+        );
+    }
+}
+
+pub struct BinaryFormatterObs {
+    name: String,
+}
+
+impl BinaryFormatterObs {
+    pub fn new() -> BinaryFormatterObs {
+        BinaryFormatterObs { name: "BinaryFormatterObs".to_string() }
+    }
+}
+
+impl Observer for BinaryFormatterObs {
+    fn get_name(&self) -> String {
+        return self.name.clone();
+    }
+
+    fn notify(&self, publisher_name: &String, data: &i32) {
+        println!("{}: '{}' has now bin data = {:#b}",
             self.name,
             publisher_name,
             data
