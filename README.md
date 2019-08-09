@@ -54,7 +54,7 @@ Refer to the original repository's [README.md](https://github.com/PacktPublishin
     * command_2: More than the original.
   * first-class.py
 * Chapter 11
-  * observer.py
+  * observer.py -> Done
 * Chapter 12
   * state.py
 * Chapter 13
