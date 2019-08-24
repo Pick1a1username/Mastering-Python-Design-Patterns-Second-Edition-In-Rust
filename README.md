@@ -62,7 +62,7 @@ Refer to the original repository's [README.md](https://github.com/PacktPublishin
   * interpreter.py
   * iterator.py
   * memento.py
-  * strategy.py
+  * strategy.py -> Done
   * template.py
 * Chapter 14
   * people_list.py
