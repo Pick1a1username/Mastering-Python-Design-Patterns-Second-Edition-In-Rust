@@ -79,6 +79,11 @@ fn all_unique(word: String, strategy: &Fn(String) -> bool) -> bool {
 }
 
 fn main() {
+    // Test Functions
+    // test_fn_pairs();
+    // test_fn_all_unique_sort();
+    // test_fn_all_unique_set();
+
     let word_in_desc = "Insert word (type quit to exit)> ";
     let strat_in_desc = "Choose strategy: [1] Use a set, [2] Sort and pair> ";
     
@@ -86,19 +91,13 @@ fn main() {
     strategies.insert("1".to_string(), &all_unique_set);
     strategies.insert("2".to_string(), &all_unique_sort);
 
-    // println!("{:?}", strategies.contains_key(&"1".to_string()));
-
-    // Test Functions
-    // test_fn_pairs();
-    // test_fn_all_unique_sort();
-    // test_fn_all_unique_set();
     loop {
         let mut word = String::new();
 
         while word == "".to_string() {
             print!("{}", word_in_desc);
             io::stdout().flush().unwrap();
-            io::stdin().read_line(&mut word);
+            io::stdin().read_line(&mut word).unwrap();
             word = word.trim().parse().unwrap();
 
             if word == "quit".to_string() {
@@ -106,26 +105,21 @@ fn main() {
                 process::exit(0);
             }
 
-            let mut strategy_picked_raw = String::new();
-            // let mut strategy_picked: u32 = 0;
+            let mut strategy_picked = String::new();
 
-            // Loop...
-            while strategy_picked_raw == "".to_string() {
+            while strategy_picked == "".to_string() {
                 print!("{}", strat_in_desc);
                 io::stdout().flush().unwrap();
-                io::stdin().read_line(&mut strategy_picked_raw);
-                strategy_picked_raw = strategy_picked_raw.trim().parse().unwrap();
+                io::stdin().read_line(&mut strategy_picked).unwrap();
+                strategy_picked = strategy_picked.trim().parse().unwrap();
 
-
-                // Todo: Handle input error.
-                // strategy_picked = strategy_picked_raw.trim().parse().expect("Please type a number!");
-                match strategies.get(&strategy_picked_raw) {
+                match strategies.get(&strategy_picked) {
                     Some(strategy) => {
                         let result = all_unique(word.clone(), strategy);
                         println!("all_unique({}): {:?}", word, result);
                     },
                     None => {
-                        println!("Incorrect option: {}", strategy_picked_raw);
+                        println!("Incorrect option: {}", strategy_picked);
                     },
                 }
             }
