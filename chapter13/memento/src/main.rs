@@ -49,4 +49,24 @@ fn main() {
     // Restoring previous state (Undo)
     q1.restore_state(q1_mem);
     println!("\nWe had to restore the previous version:\n{}", q1.get_info());
+
+    println!();
+    println!("Quote 2");
+    let mut q2 = Quote::new("To be you in a world that is constantly trying to make you be something else is the greatest accomplishment.".to_string(),
+               "Ralph Waldo Emerson".to_string());
+    println!("\nOriginal version:\n{}", q2.get_info());
+    let q2_mem1 = q2.save_state();
+
+    // changes to the text
+    q2.text = "To be yourself in a world that is constantly trying to make you something else is the greatest accomplishment.".to_string();
+    println!("\nWe fixed the text:\n{}", q2.get_info());
+    let q2_mem2 = q2.save_state();
+
+    q2.text = "To be yourself when the world is constantly trying to make you something else is the greatest accomplishment.".to_string();
+    println!("\nWe fixed the text again:\n{}", q2.get_info());
+
+    // Restoring previous state (Undo)
+    q2.restore_state(q2_mem2);
+    println!("\nWe had to restore the 2nd version, the correct one:\n{}", q2.get_info());
 }
+
