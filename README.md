@@ -49,7 +49,7 @@ Refer to the original repository's [README.md](https://github.com/PacktPublishin
   * chain.py -> Done
     -> It works. But I have no idea why it works.
 * Chapter 10
-  * command.py
+  * command.py -> Done
     * command_1: Simple implementation.
     * command_2: More than the original.
   * first-class.py
