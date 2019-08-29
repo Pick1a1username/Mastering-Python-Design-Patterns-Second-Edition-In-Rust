@@ -60,7 +60,7 @@ Refer to the original repository's [README.md](https://github.com/PacktPublishin
 * Chapter 13
   * boiler.py
   * interpreter.py
-  * iterator.py
+  * iterator.py -> Done
   * memento.py -> Done
   * strategy.py -> Done
   * template.py
