@@ -14,7 +14,6 @@ fn dots_style(msg: &String) -> String {
 fn admire_style(msg: &String) -> String {
     let msg_uppered = msg.to_uppercase();
     let msg_chars = msg_uppered.chars();
-    // Todo: Add an exclamation mark between each character.
     let mut msg_vec = Vec::new();
 
     // https://www.quora.com/How-do-you-iterate-over-the-characters-of-a-string-in-RUST
@@ -29,8 +28,8 @@ fn admire_style(msg: &String) -> String {
     return new_msg;
 }
 
-/// Capitalize characters in String variable.
-/// Todo: Simplify codes.
+/// Capitalize words in String variable.
+/// Todo: Simplify code.
 fn capitalize(string: String) -> String {
     let string_chars = string.chars();
 
@@ -67,7 +66,7 @@ fn cow_style(msg: &String) -> String {
     unimplemented!()
 }
 
-/// Since there is no crate like cowpy in Python,
+/// Since there is no crate like cowpy in Rust,
 /// make a simple ascii character generator.
 fn milk_random_cow(msg: &String) -> String {
     unimplemented!()
