@@ -97,15 +97,15 @@ fn load_cows_from_files(path: &Path) -> Result<Vec<Cow>, Box<dyn Error>> {
 
                 let mut temp_line = String::new();
                 temp_line = starting_double_quote_re.replace(&line,
-                    |caps: &Captures| { "".to_string() }
+                    |_caps: &Captures| { "".to_string() }
                 ).to_string();
 
                 temp_line = ending_double_quote_re.replace(&temp_line,
-                    |caps: &Captures| { "".to_string() }
+                    |_caps: &Captures| { "".to_string() }
                 ).to_string();
 
                 temp_line = escaped_back_slash_re.replace_all(&temp_line,
-                    |caps: &Captures| { "\\".to_string() }
+                    |_caps: &Captures| { "\\".to_string() }
                 ).to_string();
 
                 image.push(temp_line);
@@ -137,7 +137,7 @@ fn generate_cow(cow: Cow, text: String) -> Result<String, Box<dyn Error>> {
         if let Some(_) = text_box_re.captures(&line) {
             // https://qiita.com/scivola/items/60141f262caa53983c3a
             let replaced_line = text_box_re.replace(&line,
-                |caps: &Captures| {
+                |_caps: &Captures| {
                     align_string_with_ws(text.clone(), cow.max_text_length, Position::Center).unwrap()
                 }
             );
@@ -213,8 +213,6 @@ fn align_string_with_ws(string: String, length: usize, position: Position) -> Re
             return Ok(chars.into_iter().collect());
         },
     }
-
-    return Ok("asdf".to_string());
 }
 
 fn milk_random_cow(cows: Vec<Cow>, string: &String) -> String {
