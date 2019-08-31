@@ -1,6 +1,8 @@
 // use cow_rs;
 use std::path::Path;
 
+const COW_PATH: &str = "cows/";
+
 fn generate_banner(msg: &String, style: &Fn(&String) -> String) {
     println!("-- start of banner --");
     println!("{}", style(msg));
@@ -66,19 +68,15 @@ fn capitalize(string: String) -> String {
 }
 
 fn cow_style(msg: &String) -> String {
-    let cows_path = Path::new("cows/");
+    let cows_path = Path::new(COW_PATH);
     let cows = cow_rs::load_cows_from_files(&cows_path).unwrap();
 
     match cow_rs::milk_random_cow(cows.clone(), &msg) {
         Ok(cow) => cow,
-        Err(err) => match err {
-            TextTooLong => "The message is too long.".to_string(),
-            _ => "Something went wrong.".to_string(),
-        },
+        Err(err) => format!("Something went wrong: {:?}", err),
     }
 }
 
-/// Todo: Pass the directory of cows as an argument.
 fn main() {
     // Test Functions
     // test_fn_dots_style();
@@ -92,8 +90,6 @@ fn main() {
     generate_banner(&msg, &admire_style);
     generate_banner(&msg, &cow_style);
     generate_banner(&long_msg, &cow_style);
-
-
 
 }
 

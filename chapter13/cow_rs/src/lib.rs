@@ -21,7 +21,7 @@ impl fmt::Display for NoTextBoxFound {
 
 /// For that text is too long to be written to textbox.
 #[derive(Debug)]
-struct TextTooLong;
+pub struct TextTooLong;
 
 impl Error for TextTooLong {}
 
