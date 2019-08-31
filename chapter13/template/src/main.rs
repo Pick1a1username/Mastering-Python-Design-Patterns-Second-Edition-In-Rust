@@ -69,9 +69,16 @@ fn cow_style(msg: &String) -> String {
     let cows_path = Path::new("cows/");
     let cows = cow_rs::load_cows_from_files(&cows_path).unwrap();
 
-    return cow_rs::milk_random_cow(cows.clone(), &msg);
+    match cow_rs::milk_random_cow(cows.clone(), &msg) {
+        Ok(cow) => cow,
+        Err(err) => match err {
+            TextTooLong => "The message is too long.".to_string(),
+            _ => "Something went wrong.".to_string(),
+        },
+    }
 }
 
+/// Todo: Pass the directory of cows as an argument.
 fn main() {
     // Test Functions
     // test_fn_dots_style();
@@ -79,10 +86,12 @@ fn main() {
     // test_fn_capitalize();
 
     let msg = "happy coding".to_string();
+    let long_msg = "haaaaaaaaaaaaaappyyyyyy cooooooodiiiiing".to_string();
 
     generate_banner(&msg, &dots_style);
     generate_banner(&msg, &admire_style);
     generate_banner(&msg, &cow_style);
+    generate_banner(&long_msg, &cow_style);
 
 
 

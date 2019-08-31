@@ -145,13 +145,10 @@ pub fn generate_cow(cow: Cow, text: String) -> Result<String, Box<dyn Error>> {
         } else {
             image_vec.push(line.clone());
         }
+        image_vec.push("\n".to_string());
     }
     
-    for line in image_vec.iter() {
-        println!("{}", line);
-    }
-
-    return Ok("image_string".to_string());
+    return Ok(image_vec.into_iter().collect());
 }
 
 /// Note that the string will be trimmed before being positioned.
@@ -215,11 +212,11 @@ fn align_string_with_ws(string: String, length: usize, position: Position) -> Re
     }
 }
 
-pub fn milk_random_cow(cows: Vec<Cow>, string: &String) -> String {
+pub fn milk_random_cow(cows: Vec<Cow>, string: &String) -> Result<String, Box<dyn Error>> {
     let mut rng = rand::thread_rng();
     let cow_num: usize = cows.len();
 
-    generate_cow(cows[rng.gen_range(0, cow_num)].clone(), string.clone()).unwrap()
+    return generate_cow(cows[rng.gen_range(0, cow_num)].clone(), string.clone());
 }
 
 /// Get the length of the text box in the image.
