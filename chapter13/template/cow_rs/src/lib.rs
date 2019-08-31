@@ -3,6 +3,7 @@ use std::fmt;
 use std::fs;
 use std::path::Path;
 
+use rand::Rng;
 use regex::{Regex, Captures};
 use serde_json::Value;
 
@@ -75,6 +76,7 @@ impl fmt::Display for NoCowFound {
     }
 }
 
+/// Note: Some characters in image may make the function fails.
 fn load_cows_from_files(path: &Path) -> Result<Vec<Cow>, Box<dyn Error>> {
     let mut cows: Vec<Cow> = Vec::new();
     for data in path.read_dir()? {
@@ -85,6 +87,7 @@ fn load_cows_from_files(path: &Path) -> Result<Vec<Cow>, Box<dyn Error>> {
             let mut image = Vec::new();
 
             // Correct some escape characters and quotes.
+            // Todo: Make an indenpendent function for this process.
             // https://users.rust-lang.org/t/escape-speech-marks-in-regex/4266/5
             let starting_double_quote_re = Regex::new(r#"^""#).unwrap();
             let ending_double_quote_re = Regex::new(r#""$"#).unwrap();
@@ -214,8 +217,11 @@ fn align_string_with_ws(string: String, length: usize, position: Position) -> Re
     return Ok("asdf".to_string());
 }
 
-fn milk_random_cow(string: &String) -> String {
-    unimplemented!();
+fn milk_random_cow(cows: Vec<Cow>, string: &String) -> String {
+    let mut rng = rand::thread_rng();
+    let cow_num: usize = cows.len();
+
+    generate_cow(cows[rng.gen_range(0, cow_num)].clone(), string.clone()).unwrap()
 }
 
 /// Get the length of the text box in the image.
@@ -275,7 +281,7 @@ mod tests {
     fn test_fn_generate_cow() {
         let path = Path::new("cows/");
         let cows = load_cows_from_files(&path).unwrap();
-        generate_cow(cows[0].clone(), "hello".to_string());
+        generate_cow(cows[1].clone(), "hello".to_string());
         assert_eq!(1, 1);
     }
 
@@ -288,6 +294,17 @@ mod tests {
         assert_eq!(align_string_with_ws(string_1.clone(), 20, Position::Right).unwrap(), "        hello  world".to_string());
         assert_eq!(align_string_with_ws(string_2.clone(), 20, Position::Center).unwrap(), "    hello world     ".to_string());
         assert_eq!(align_string_with_ws(string_1.clone(), 10, Position::Right).is_err(), true);
+    }
+
+    #[test]
+    fn test_fn_milk_random_cow() {
+        let path = Path::new("cows/");
+        let cows = load_cows_from_files(&path).unwrap();
+
+        for i in 1..21 {
+            println!("Random cows!");
+            milk_random_cow(cows.clone(), &"Hello World!".to_string());
+        }
     }
 }
 
