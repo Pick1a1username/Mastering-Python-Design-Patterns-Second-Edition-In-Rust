@@ -29,11 +29,39 @@ impl fmt::Display for TextTooLong {
     }
 }
 
+#[derive(Debug)]
+struct LengthShorterThanString;
+
+impl Error for LengthShorterThanString {}
+
+impl fmt::Display for LengthShorterThanString {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+#[derive(Debug)]
+struct UnexpectedResult;
+
+impl Error for UnexpectedResult {}
+
+impl fmt::Display for UnexpectedResult {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 #[derive(Clone)]
 struct Cow {
     name: String,
     max_text_length: usize,
     image: Vec<String>,
+}
+
+enum Position {
+    Left,
+    Center,
+    Right,
 }
 
 #[derive(Debug)]
@@ -97,6 +125,71 @@ fn generate_cow(cow: Cow, text: String) -> Result<String, Box<dyn Error>> {
     return Ok("image_string".to_string());
 }
 
+/// Note that the string will be trimmed before being positioned.
+fn align_string_with_ws(string: String, length: usize, position: Position) -> Result<String, Box<dyn Error>> {
+    let mut trimmed_string = String::new();
+    trimmed_string = string.trim().to_string();
+    if trimmed_string.len() > length {
+        return Err(Box::new(LengthShorterThanString));
+    }
+    
+    match position {
+        Position::Left => {
+            let mut chars = Vec::new();
+            for char in trimmed_string.chars() {
+                chars.push(char);
+            }
+            for _ in 0..(length - trimmed_string.len()) {
+                chars.push(' ');
+            }
+            return Ok(chars.into_iter().collect());
+        },
+        Position::Center => {
+            let mut chars = Vec::new();
+            let left_right_ws = length - trimmed_string.len();
+            let mut left_ws: usize = 0;
+            let mut right_ws: usize = 0;
+            
+            match left_right_ws % 2 {
+                0 => {
+                    left_ws = left_right_ws / 2;
+                    right_ws = left_right_ws / 2;
+                },
+                1 => {
+                    left_ws = (left_right_ws - 1) / 2;
+                    right_ws = ( (left_right_ws - 1) / 2 ) + 1;
+                },
+                _ => {},
+            }
+
+            for _ in 0..(left_ws) {
+                chars.push(' ');
+            }
+            for char in trimmed_string.chars() {
+                chars.push(char);
+            }
+            for _ in 0..(right_ws) {
+                chars.push(' ');
+            }
+            return Ok(chars.into_iter().collect());
+        },
+        Position::Right => {
+            let mut chars = Vec::new();
+            for _ in 0..(length - trimmed_string.len()) {
+                chars.push(' ');
+            }
+            for char in trimmed_string.chars() {
+                chars.push(char);
+            }
+            return Ok(chars.into_iter().collect());
+        },
+    }
+
+
+
+    return Ok("asdf".to_string());
+}
+
 fn milk_random_cow(string: &String) -> String {
     unimplemented!();
 }
@@ -127,6 +220,7 @@ fn value_vec_to_string_vec(value_vec: Vec<Value>) -> Vec<String> {
 mod tests {
     use super::*;
 
+    /// Todo: Test properly.
     #[test]
     fn test_fn_load_cows_from_files() {
         let path = Path::new("cows/");
@@ -137,6 +231,7 @@ mod tests {
         assert_eq!(1, 1);
     }
 
+    /// Todo: Test properly.
     #[test]
     fn test_fn_get_max_text_len() {
         let image = vec![
@@ -149,12 +244,24 @@ mod tests {
         assert_eq!(1, 1);
     }
 
+    /// Todo: Test properly.
     #[test]
     fn test_fn_generate_cow() {
         let path = Path::new("cows/");
         let cows = load_cows_from_files(&path).unwrap();
         generate_cow(cows[0].clone(), "hello".to_string());
         assert_eq!(1, 1);
+    }
+
+    #[test]
+    fn test_fn_align_string_with_ws() {
+        let string_1 = "  hello  world  ".to_string();
+        let string_2 = "  hello world   ".to_string();
+
+        assert_eq!(align_string_with_ws(string_1.clone(), 20, Position::Left).unwrap(), "hello  world        ".to_string());
+        assert_eq!(align_string_with_ws(string_1.clone(), 20, Position::Right).unwrap(), "        hello  world".to_string());
+        assert_eq!(align_string_with_ws(string_2.clone(), 20, Position::Center).unwrap(), "    hello world     ".to_string());
+        assert_eq!(align_string_with_ws(string_1.clone(), 10, Position::Right).is_err(), true);
     }
 }
 
