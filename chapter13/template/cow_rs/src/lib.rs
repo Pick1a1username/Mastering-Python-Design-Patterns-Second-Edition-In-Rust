@@ -81,7 +81,33 @@ fn load_cows_from_files(path: &Path) -> Result<Vec<Cow>, Box<dyn Error>> {
         if let Ok(cow_path) = data {
             let raw_data = fs::read_to_string(cow_path.path())?;
             let json_data: Value = serde_json::from_str(&raw_data)?;
-            let image = value_vec_to_string_vec(json_data["image"].as_array().unwrap().clone());
+            let image_raw = value_vec_to_string_vec(json_data["image"].as_array().unwrap().clone());
+            let mut image = Vec::new();
+
+            // Correct some escape characters and quotes.
+            // https://users.rust-lang.org/t/escape-speech-marks-in-regex/4266/5
+            let starting_double_quote_re = Regex::new(r#"^""#).unwrap();
+            let ending_double_quote_re = Regex::new(r#""$"#).unwrap();
+            let escaped_back_slash_re = Regex::new(r#"\\\\"#).unwrap();
+
+            for line in image_raw {
+
+                let mut temp_line = String::new();
+                temp_line = starting_double_quote_re.replace(&line,
+                    |caps: &Captures| { "".to_string() }
+                ).to_string();
+
+                temp_line = ending_double_quote_re.replace(&temp_line,
+                    |caps: &Captures| { "".to_string() }
+                ).to_string();
+
+                temp_line = escaped_back_slash_re.replace_all(&temp_line,
+                    |caps: &Captures| { "\\".to_string() }
+                ).to_string();
+
+                image.push(temp_line);
+            }
+
             cows.push( Cow {
                 name: json_data["name"].to_string(),
                 max_text_length: get_max_text_len(image.clone()).unwrap(),
@@ -109,7 +135,7 @@ fn generate_cow(cow: Cow, text: String) -> Result<String, Box<dyn Error>> {
             // https://qiita.com/scivola/items/60141f262caa53983c3a
             let replaced_line = text_box_re.replace(&line,
                 |caps: &Captures| {
-                    text.clone()
+                    align_string_with_ws(text.clone(), cow.max_text_length, Position::Center).unwrap()
                 }
             );
             image_vec.push(replaced_line.to_string());
@@ -185,8 +211,6 @@ fn align_string_with_ws(string: String, length: usize, position: Position) -> Re
         },
     }
 
-
-
     return Ok("asdf".to_string());
 }
 
@@ -194,6 +218,7 @@ fn milk_random_cow(string: &String) -> String {
     unimplemented!();
 }
 
+/// Get the length of the text box in the image.
 fn get_max_text_len(image: Vec<String>) -> Result<usize, Box<dyn Error>> {
     let text_box_re = Regex::new(r"^.*(BEGIN\s+END).*$").unwrap();
 
@@ -206,6 +231,7 @@ fn get_max_text_len(image: Vec<String>) -> Result<usize, Box<dyn Error>> {
     return Err(Box::new(NoTextBoxFound));
 }
 
+/// Convert a vector of serde_json::Value to a vector of String.
 fn value_vec_to_string_vec(value_vec: Vec<Value>) -> Vec<String> {
     let mut string_vec = Vec::new();
 
