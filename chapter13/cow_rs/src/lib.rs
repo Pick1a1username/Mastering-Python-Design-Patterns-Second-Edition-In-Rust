@@ -7,7 +7,7 @@ use rand::Rng;
 use regex::{Regex, Captures};
 use serde_json::Value;
 
-
+/// For that there's no textbox in image.
 #[derive(Debug)]
 struct NoTextBoxFound;
 
@@ -19,6 +19,7 @@ impl fmt::Display for NoTextBoxFound {
     }
 }
 
+/// For that text is too long to be written to textbox.
 #[derive(Debug)]
 struct TextTooLong;
 
@@ -30,6 +31,8 @@ impl fmt::Display for TextTooLong {
     }
 }
 
+/// For that length of aligned text is shorter than trimmed text.
+/// Refer to align_string_with_ws() for more details.
 #[derive(Debug)]
 struct LengthShorterThanString;
 
@@ -41,6 +44,7 @@ impl fmt::Display for LengthShorterThanString {
     }
 }
 
+/// Used when Error is not expected.
 #[derive(Debug)]
 struct UnexpectedResult;
 
@@ -52,6 +56,7 @@ impl fmt::Display for UnexpectedResult {
     }
 }
 
+/// Used to store image.
 #[derive(Clone)]
 pub struct Cow {
     name: String,
@@ -59,12 +64,7 @@ pub struct Cow {
     image: Vec<String>,
 }
 
-enum Position {
-    Left,
-    Center,
-    Right,
-}
-
+/// For that there's no cow data in the specified directory.
 #[derive(Debug)]
 struct NoCowFound;
 
@@ -76,14 +76,34 @@ impl fmt::Display for NoCowFound {
     }
 }
 
+/// For text alignment.
+enum Position {
+    Left,
+    Center,
+    Right,
+}
+
+/// Load images from files.
+///
 /// Note: Some characters in image may make the function fails.
 pub fn load_cows_from_files(path: &Path) -> Result<Vec<Cow>, Box<dyn Error>> {
+    // Initialize a vector for images.
     let mut cows: Vec<Cow> = Vec::new();
+
+    // Read each file from the directory.
     for data in path.read_dir()? {
+
+        // If at least one file exists...
         if let Ok(cow_path) = data {
+            // Read data as String.
             let raw_data = fs::read_to_string(cow_path.path())?;
+            // Convert raw data(String) to Json.
             let json_data: Value = serde_json::from_str(&raw_data)?;
+            // Convert image saved as serde_json::Value to a vector of String.
+            // This converted data will be cleaned later.
             let image_raw = value_vec_to_string_vec(json_data["image"].as_array().unwrap().clone());
+
+            // Initialize a vector that will be returned as a result.
             let mut image = Vec::new();
 
             // Correct some escape characters and quotes.
@@ -93,17 +113,17 @@ pub fn load_cows_from_files(path: &Path) -> Result<Vec<Cow>, Box<dyn Error>> {
             let ending_double_quote_re = Regex::new(r#""$"#).unwrap();
             let escaped_back_slash_re = Regex::new(r#"\\\\"#).unwrap();
 
+            // Read each line.
             for line in image_raw {
-
+                // Initialize an empty vector that will store cleaned lines.
                 let mut temp_line = String::new();
+                // Clean lines.
                 temp_line = starting_double_quote_re.replace(&line,
                     |_caps: &Captures| { "".to_string() }
                 ).to_string();
-
                 temp_line = ending_double_quote_re.replace(&temp_line,
                     |_caps: &Captures| { "".to_string() }
                 ).to_string();
-
                 temp_line = escaped_back_slash_re.replace_all(&temp_line,
                     |_caps: &Captures| { "\\".to_string() }
                 ).to_string();
@@ -111,6 +131,7 @@ pub fn load_cows_from_files(path: &Path) -> Result<Vec<Cow>, Box<dyn Error>> {
                 image.push(temp_line);
             }
 
+            // Push the image data to the vector of Cow.
             cows.push( Cow {
                 name: json_data["name"].to_string(),
                 max_text_length: get_max_text_len(image.clone()).unwrap(),
@@ -118,23 +139,36 @@ pub fn load_cows_from_files(path: &Path) -> Result<Vec<Cow>, Box<dyn Error>> {
             });
         }
     }
+
     match cows.is_empty() {
+        // If there's at least one image, return data.
         false => Ok(cows),
+        // If there's no image, return Error.
         true => Err(Box::new(NoCowFound)),
     }
 }
 
+/// Generate an image.
 pub fn generate_cow(cow: Cow, text: String) -> Result<String, Box<dyn Error>> {
 
+    // If the text is longer than the textbox of the image, return Error.
+    // Todo: Is it better to cut the text to fit it to the textbox?
     if cow.max_text_length < text.len() {
         return Err(Box::new(TextTooLong));
     }
 
+    // Create the Regex instance for replace the textbox with the text.
     let text_box_re = Regex::new(r"BEGIN\s+END").unwrap();
+    // Initialize a vector to store the image with the text.
     let mut image_vec: Vec<String> = Vec::new();
 
+    // Read each line of the image.
     for line in cow.image.iter() {
+        // If there is the textbox, replace the textbox with the text.
+        // Todo: It seems to me that this if statement is useless.
         if let Some(_) = text_box_re.captures(&line) {
+            // Replace the textbox with the text.
+            // Note that you cannot simply specify new text(String).
             // https://qiita.com/scivola/items/60141f262caa53983c3a
             let replaced_line = text_box_re.replace(&line,
                 |_caps: &Captures| {
@@ -143,22 +177,30 @@ pub fn generate_cow(cow: Cow, text: String) -> Result<String, Box<dyn Error>> {
             );
             image_vec.push(replaced_line.to_string());
         } else {
+            // If there's no textbox, push the line without editing.
             image_vec.push(line.clone());
         }
+        // Push new line code between lines.
         image_vec.push("\n".to_string());
     }
     
+    // Return image as one String.
     return Ok(image_vec.into_iter().collect());
 }
 
 /// Note that the string will be trimmed before being positioned.
 fn align_string_with_ws(string: String, length: usize, position: Position) -> Result<String, Box<dyn Error>> {
+    // Initialize a String variable to store trimmed String.
     let mut trimmed_string = String::new();
+    // Trim the String.
     trimmed_string = string.trim().to_string();
+    // If the trimmed String is longer than the length of the entire String that will be returned,
+    // return Error.
     if trimmed_string.len() > length {
         return Err(Box::new(LengthShorterThanString));
     }
     
+    // Align the String with whitespaces.
     match position {
         Position::Left => {
             let mut chars = Vec::new();
@@ -176,12 +218,14 @@ fn align_string_with_ws(string: String, length: usize, position: Position) -> Re
             let mut left_ws: usize = 0;
             let mut right_ws: usize = 0;
             
+            // If the number of whitespaces, needed to be inserted, is odd, 
             match left_right_ws % 2 {
                 0 => {
                     left_ws = left_right_ws / 2;
                     right_ws = left_right_ws / 2;
                 },
                 1 => {
+                    // insert one more whitespace to the right side.
                     left_ws = (left_right_ws - 1) / 2;
                     right_ws = ( (left_right_ws - 1) / 2 ) + 1;
                 },
@@ -212,6 +256,7 @@ fn align_string_with_ws(string: String, length: usize, position: Position) -> Re
     }
 }
 
+/// Generate a random image.
 pub fn milk_random_cow(cows: Vec<Cow>, string: &String) -> Result<String, Box<dyn Error>> {
     let mut rng = rand::thread_rng();
     let cow_num: usize = cows.len();
