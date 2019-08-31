@@ -53,7 +53,7 @@ impl fmt::Display for UnexpectedResult {
 }
 
 #[derive(Clone)]
-struct Cow {
+pub struct Cow {
     name: String,
     max_text_length: usize,
     image: Vec<String>,
@@ -77,7 +77,7 @@ impl fmt::Display for NoCowFound {
 }
 
 /// Note: Some characters in image may make the function fails.
-fn load_cows_from_files(path: &Path) -> Result<Vec<Cow>, Box<dyn Error>> {
+pub fn load_cows_from_files(path: &Path) -> Result<Vec<Cow>, Box<dyn Error>> {
     let mut cows: Vec<Cow> = Vec::new();
     for data in path.read_dir()? {
         if let Ok(cow_path) = data {
@@ -124,7 +124,7 @@ fn load_cows_from_files(path: &Path) -> Result<Vec<Cow>, Box<dyn Error>> {
     }
 }
 
-fn generate_cow(cow: Cow, text: String) -> Result<String, Box<dyn Error>> {
+pub fn generate_cow(cow: Cow, text: String) -> Result<String, Box<dyn Error>> {
 
     if cow.max_text_length < text.len() {
         return Err(Box::new(TextTooLong));
@@ -215,7 +215,7 @@ fn align_string_with_ws(string: String, length: usize, position: Position) -> Re
     }
 }
 
-fn milk_random_cow(cows: Vec<Cow>, string: &String) -> String {
+pub fn milk_random_cow(cows: Vec<Cow>, string: &String) -> String {
     let mut rng = rand::thread_rng();
     let cow_num: usize = cows.len();
 

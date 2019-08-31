@@ -1,3 +1,6 @@
+// use cow_rs;
+use std::path::Path;
+
 fn generate_banner(msg: &String, style: &Fn(&String) -> String) {
     println!("-- start of banner --");
     println!("{}", style(msg));
@@ -63,20 +66,26 @@ fn capitalize(string: String) -> String {
 }
 
 fn cow_style(msg: &String) -> String {
-    unimplemented!()
-}
+    let cows_path = Path::new("cows/");
+    let cows = cow_rs::load_cows_from_files(&cows_path).unwrap();
 
-/// Since there is no crate like cowpy in Rust,
-/// make a simple ascii character generator.
-fn milk_random_cow(msg: &String) -> String {
-    unimplemented!()
+    return cow_rs::milk_random_cow(cows.clone(), &msg);
 }
 
 fn main() {
     // Test Functions
     // test_fn_dots_style();
     // test_fn_admire_style();
-    test_fn_capitalize();
+    // test_fn_capitalize();
+
+    let msg = "happy coding".to_string();
+
+    generate_banner(&msg, &dots_style);
+    generate_banner(&msg, &admire_style);
+    generate_banner(&msg, &cow_style);
+
+
+
 }
 
 fn test_fn_dots_style() {
